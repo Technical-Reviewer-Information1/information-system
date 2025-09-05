@@ -128,7 +128,9 @@ if st.session_state.current_step == 1:
     if st.session_state.cart:
         cart_df = pd.DataFrame(st.session_state.cart)
         st.dataframe(cart_df, use_container_width=True)
-        total = sum([item['価格'] for item in st.session_state.cart])
+        total = 0
+        for item in st.session_state.cart:
+            total += item['価格']
         st.write(f"**合計金額: {total}円**")
         
         if st.button("💰 お会計", type="primary"):
@@ -213,7 +215,7 @@ elif st.session_state.current_step == 4:
     """)
     
     # 発注量計算
-    total_sales = sum(product_counts.values())
+    total_sales = product_counts.sum()
     average_sales = total_sales / len(product_counts)
     
     st.subheader("📋 発注情報リスト")
@@ -309,24 +311,62 @@ elif st.session_state.current_step == 5:
         "配送センター": (2, 0.5)
     }
     
-    # Plotlyでネットワーク図を描画
-    edge_x = []
-    edge_y = []
-    edge_info = []
+    # Plotlyでネットワーク図を描画（矢印付き）
+    edge_traces = []
     
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        edge_x.extend([x0, x1, None])
-        edge_y.extend([y0, y1, None])
-        edge_info.append(G.edges[edge]['label'])
-    
-    edge_trace = go.Scatter(
-        x=edge_x, y=edge_y,
-        line=dict(width=3, color='#888'),
-        hoverinfo='none',
-        mode='lines'
-    )
+        
+        # 矢印の線
+        edge_trace = go.Scatter(
+            x=[x0, x1], y=[y0, y1],
+            mode='lines',
+            line=dict(width=3, color='#888'),
+            hoverinfo='none',
+            showlegend=False
+        )
+        edge_traces.append(edge_trace)
+        
+        # 矢印の先端を計算
+        arrow_length = 0.05
+        dx = x1 - x0
+        dy = y1 - y0
+        length = (dx**2 + dy**2)**0.5
+        
+        # 単位ベクトル
+        ux = dx / length
+        uy = dy / length
+        
+        # 矢印の先端位置（ノードの境界に調整）
+        arrow_end_x = x1 - 0.08 * ux
+        arrow_end_y = y1 - 0.08 * uy
+        
+        # 矢印の根元
+        arrow_start_x = arrow_end_x - arrow_length * ux
+        arrow_start_y = arrow_end_y - arrow_length * uy
+        
+        # 矢印の翼
+        perp_x = -uy * arrow_length * 0.5
+        perp_y = ux * arrow_length * 0.5
+        
+        wing1_x = arrow_start_x + perp_x
+        wing1_y = arrow_start_y + perp_y
+        wing2_x = arrow_start_x - perp_x
+        wing2_y = arrow_start_y - perp_y
+        
+        # 矢印の形状
+        arrow_trace = go.Scatter(
+            x=[wing1_x, arrow_end_x, wing2_x],
+            y=[wing1_y, arrow_end_y, wing2_y],
+            mode='lines',
+            line=dict(width=3, color='#FF4444'),
+            fill='toself',
+            fillcolor='#FF4444',
+            hoverinfo='none',
+            showlegend=False
+        )
+        edge_traces.append(arrow_trace)
     
     node_x = []
     node_y = []
@@ -362,7 +402,7 @@ elif st.session_state.current_step == 5:
         )
     )
     
-    # エッジのラベルを追加
+    # エッジのラベルを追加（矢印上に配置）
     edge_labels_x = []
     edge_labels_y = []
     edge_labels_text = []
@@ -370,19 +410,28 @@ elif st.session_state.current_step == 5:
     for i, edge in enumerate(G.edges()):
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        edge_labels_x.append((x0 + x1) / 2)
-        edge_labels_y.append((y0 + y1) / 2 + 0.1)
+        
+        # ラベルを矢印の中央よりやや手前に配置
+        mid_x = (x0 + x1) / 2 - 0.05 * (x1 - x0)
+        mid_y = (y0 + y1) / 2 - 0.05 * (y1 - y0)
+        
+        edge_labels_x.append(mid_x)
+        edge_labels_y.append(mid_y + 0.08)  # 少し上に配置
         edge_labels_text.append(G.edges[edge]['label'])
     
     edge_label_trace = go.Scatter(
         x=edge_labels_x, y=edge_labels_y,
         mode='text',
         text=edge_labels_text,
-        textfont=dict(size=10, color="black"),
-        hoverinfo='none'
+        textfont=dict(size=12, color="black", family="Arial Black"),
+        hoverinfo='none',
+        showlegend=False
     )
     
-    fig = go.Figure(data=[edge_trace, node_trace, edge_label_trace],
+    # 全てのトレースを結合
+    all_traces = edge_traces + [node_trace, edge_label_trace]
+    
+    fig = go.Figure(data=all_traces,
                     layout=go.Layout(
                         title=dict(text='情報システムのエッジとノード図', font=dict(size=16)),
                         showlegend=False,
