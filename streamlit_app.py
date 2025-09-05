@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+import plotly.graph_objects as go
+import networkx as nx
+from datetime import datetime, timedelta
+import random
 
 # セッション状態の初期化
 if 'current_step' not in st.session_state:
@@ -9,19 +12,46 @@ if 'current_step' not in st.session_state:
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 if 'sales_data' not in st.session_state:
-    # 初期サンプルデータ
-    st.session_state.sales_data = [
-        {'時刻': '16:28:40', '商品名': 'おにぎり', '価格': 120},
-        {'時刻': '16:25:12', '商品名': 'りんご', '価格': 150},
-        {'時刻': '16:22:35', '商品名': 'おにぎり', '価格': 120},
-        {'時刻': '16:20:18', '商品名': '牛乳', '価格': 200},
-        {'時刻': '16:18:45', '商品名': 'おにぎり', '価格': 120},
-        {'時刻': '16:15:23', '商品名': 'りんご', '価格': 150},
-        {'時刻': '16:12:56', '商品名': '食パン', '価格': 250},
-        {'時刻': '16:10:31', '商品名': 'おにぎり', '価格': 120},
-        {'時刻': '16:08:17', '商品名': '牛乳', '価格': 200},
-        {'時刻': '16:05:44', '商品名': 'おにぎり', '価格': 120},
+    # 大量の初期サンプルデータを生成
+    st.session_state.sales_data = []
+    
+    # 商品リストと重み（売れやすさ）
+    products_with_weights = [
+        ('おにぎり', 120, 30),  # 最も人気
+        ('りんご', 150, 20),
+        ('牛乳', 200, 18),
+        ('食パン', 250, 8)      # 最も不人気
     ]
+    
+    # 過去7日分のデータを生成
+    base_time = datetime.now() - timedelta(days=7)
+    
+    for day in range(7):
+        # 1日あたり約40-50件の販売データ
+        daily_sales = random.randint(40, 50)
+        
+        for sale in range(daily_sales):
+            # 営業時間内（9:00-21:00）の時刻を生成
+            hour = random.randint(9, 20)
+            minute = random.randint(0, 59)
+            second = random.randint(0, 59)
+            
+            sale_time = base_time + timedelta(days=day, hours=hour, minutes=minute, seconds=second)
+            time_str = sale_time.strftime("%H:%M:%S")
+            
+            # 重みに基づいて商品を選択
+            products, prices, weights = zip(*products_with_weights)
+            selected_product = random.choices(products, weights=weights)[0]
+            selected_price = dict(zip(products, prices))[selected_product]
+            
+            st.session_state.sales_data.append({
+                '時刻': time_str,
+                '商品名': selected_product,
+                '価格': selected_price
+            })
+    
+    # 時刻順にソート（新しいものが上に来るように逆順）
+    st.session_state.sales_data.sort(key=lambda x: x['時刻'], reverse=True)
 
 # アプリケーションタイトル
 st.title("情報システム体験Webアプリ")
@@ -204,18 +234,126 @@ elif st.session_state.current_step == 5:
     # 情報システムの流れ図
     st.subheader("🔄 情報システムの流れ")
     
-    st.markdown("""
-    ```
-    👥 お客様          🏪 店舗          🚚 配送センター
-         |              |                    |
-         | ①販売情報     |                    |
-         |─────────────→|                    |
-         |              | ②データ分析         |
-         |              |     ↓             |
-         |              | ③発注情報          |
-         |              |──────────────────→|
-    ```
-    """)
+    # ネットワーク図の作成
+    G = nx.DiGraph()
+    
+    # ノード（実体）の追加
+    G.add_node("お客様", type="entity", emoji="👥")
+    G.add_node("店舗", type="entity", emoji="🏪")
+    G.add_node("配送センター", type="entity", emoji="🚚")
+    
+    # プロセスノードの追加
+    G.add_node("データ分析", type="process", emoji="📊")
+    
+    # エッジ（情報の流れ）の追加
+    G.add_edge("お客様", "店舗", label="①販売情報", color="blue")
+    G.add_edge("店舗", "データ分析", label="②データ処理", color="green")
+    G.add_edge("データ分析", "配送センター", label="③発注情報", color="red")
+    
+    # ノードの位置を設定
+    pos = {
+        "お客様": (0, 1),
+        "店舗": (1, 1),
+        "データ分析": (1, 0.5),
+        "配送センター": (2, 0.5)
+    }
+    
+    # Plotlyでネットワーク図を描画
+    edge_x = []
+    edge_y = []
+    edge_info = []
+    
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+        edge_info.append(G.edges[edge]['label'])
+    
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=3, color='#888'),
+        hoverinfo='none',
+        mode='lines'
+    )
+    
+    node_x = []
+    node_y = []
+    node_text = []
+    node_info = []
+    node_colors = []
+    
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        emoji = G.nodes[node]['emoji']
+        node_text.append(f"{emoji}<br>{node}")
+        node_info.append(node)
+        
+        # ノードの色を設定
+        if G.nodes[node]['type'] == 'entity':
+            node_colors.append('#FF6B6B')
+        else:
+            node_colors.append('#4ECDC4')
+    
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers+text',
+        hoverinfo='text',
+        text=node_text,
+        textposition="middle center",
+        textfont=dict(size=12, color="white"),
+        marker=dict(
+            size=80,
+            color=node_colors,
+            line=dict(width=2, color="white")
+        )
+    )
+    
+    # エッジのラベルを追加
+    edge_labels_x = []
+    edge_labels_y = []
+    edge_labels_text = []
+    
+    for i, edge in enumerate(G.edges()):
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_labels_x.append((x0 + x1) / 2)
+        edge_labels_y.append((y0 + y1) / 2 + 0.1)
+        edge_labels_text.append(G.edges[edge]['label'])
+    
+    edge_label_trace = go.Scatter(
+        x=edge_labels_x, y=edge_labels_y,
+        mode='text',
+        text=edge_labels_text,
+        textfont=dict(size=10, color="black"),
+        hoverinfo='none'
+    )
+    
+    fig = go.Figure(data=[edge_trace, node_trace, edge_label_trace],
+                    layout=go.Layout(
+                        title='情報システムのエッジとノード図',
+                        titlefont_size=16,
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20,l=5,r=5,t=40),
+                        annotations=[
+                            dict(
+                                text="赤いノード: 実体（エンティティ）<br>青緑ノード: プロセス",
+                                showarrow=False,
+                                xref="paper", yref="paper",
+                                x=0.005, y=-0.002,
+                                xanchor="left", yanchor="bottom",
+                                font=dict(size=10)
+                            )
+                        ],
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        height=400
+                    ))
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     # 解説
     st.subheader("📚 解説")
@@ -261,8 +399,10 @@ elif st.session_state.current_step == 5:
     あなたも今回の体験で、情報システムの基本的な流れを理解できましたね！
     """)
     
-    if st.button("🔄 もう一度最初から体験する"):
-        st.session_state.current_step = 1
-        st.session_state.cart = []
-        st.rerun()
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("🔄 もう一度最初から体験する"):
+            st.session_state.current_step = 1
+            st.session_state.cart = []
+            st.rerun()
 
