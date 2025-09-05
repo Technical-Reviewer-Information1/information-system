@@ -311,62 +311,23 @@ elif st.session_state.current_step == 5:
         "配送センター": (2, 0.5)
     }
     
-    # Plotlyでネットワーク図を描画（矢印付き）
-    edge_traces = []
+    # Plotlyでネットワーク図を描画（線のみ）
+    edge_x = []
+    edge_y = []
     
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        
-        # 矢印の線
-        edge_trace = go.Scatter(
-            x=[x0, x1], y=[y0, y1],
-            mode='lines',
-            line=dict(width=3, color='#888'),
-            hoverinfo='none',
-            showlegend=False
-        )
-        edge_traces.append(edge_trace)
-        
-        # 矢印の先端を計算
-        arrow_length = 0.05
-        dx = x1 - x0
-        dy = y1 - y0
-        length = (dx**2 + dy**2)**0.5
-        
-        # 単位ベクトル
-        ux = dx / length
-        uy = dy / length
-        
-        # 矢印の先端位置（ノードの境界に調整）
-        arrow_end_x = x1 - 0.08 * ux
-        arrow_end_y = y1 - 0.08 * uy
-        
-        # 矢印の根元
-        arrow_start_x = arrow_end_x - arrow_length * ux
-        arrow_start_y = arrow_end_y - arrow_length * uy
-        
-        # 矢印の翼
-        perp_x = -uy * arrow_length * 0.5
-        perp_y = ux * arrow_length * 0.5
-        
-        wing1_x = arrow_start_x + perp_x
-        wing1_y = arrow_start_y + perp_y
-        wing2_x = arrow_start_x - perp_x
-        wing2_y = arrow_start_y - perp_y
-        
-        # 矢印の形状
-        arrow_trace = go.Scatter(
-            x=[wing1_x, arrow_end_x, wing2_x],
-            y=[wing1_y, arrow_end_y, wing2_y],
-            mode='lines',
-            line=dict(width=3, color='#FF4444'),
-            fill='toself',
-            fillcolor='#FF4444',
-            hoverinfo='none',
-            showlegend=False
-        )
-        edge_traces.append(arrow_trace)
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+    
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=3, color='#888'),
+        hoverinfo='none',
+        mode='lines',
+        showlegend=False
+    )
     
     node_x = []
     node_y = []
@@ -402,7 +363,7 @@ elif st.session_state.current_step == 5:
         )
     )
     
-    # エッジのラベルを追加（矢印上に配置）
+    # エッジのラベルを追加（線の中央に配置）
     edge_labels_x = []
     edge_labels_y = []
     edge_labels_text = []
@@ -411,9 +372,9 @@ elif st.session_state.current_step == 5:
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         
-        # ラベルを矢印の中央よりやや手前に配置
-        mid_x = (x0 + x1) / 2 - 0.05 * (x1 - x0)
-        mid_y = (y0 + y1) / 2 - 0.05 * (y1 - y0)
+        # ラベルを線の中央に配置
+        mid_x = (x0 + x1) / 2
+        mid_y = (y0 + y1) / 2
         
         edge_labels_x.append(mid_x)
         edge_labels_y.append(mid_y + 0.08)  # 少し上に配置
@@ -428,10 +389,7 @@ elif st.session_state.current_step == 5:
         showlegend=False
     )
     
-    # 全てのトレースを結合
-    all_traces = edge_traces + [node_trace, edge_label_trace]
-    
-    fig = go.Figure(data=all_traces,
+    fig = go.Figure(data=[edge_trace, node_trace, edge_label_trace],
                     layout=go.Layout(
                         title=dict(text='情報システムのエッジとノード図', font=dict(size=16)),
                         showlegend=False,
