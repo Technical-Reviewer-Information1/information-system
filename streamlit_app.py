@@ -198,29 +198,80 @@ elif st.session_state.current_step == 4:
     # 発注情報の自動生成
     product_counts = analyze_sales_data()
     
+    st.subheader("📊 数理モデル：発注量決定アルゴリズム")
+    
+    # 数理モデルの説明
+    st.info("""
+    **発注量決定式:**
+    
+    発注量 = 基準発注量 × (販売実績係数 + 安全在庫係数)
+    
+    - **基準発注量**: 20個（基本値）
+    - **販売実績係数**: (該当商品の売上個数 ÷ 全体平均売上個数)
+    - **安全在庫係数**: 0.2（20%の安全在庫）
+    - **最小発注単位**: 5個
+    """)
+    
+    # 発注量計算
+    total_sales = sum(product_counts.values())
+    average_sales = total_sales / len(product_counts)
+    
     st.subheader("📋 発注情報リスト")
     
     order_info = []
+    calculation_details = []
+    
     for product, count in product_counts.items():
         emoji = products[product]['emoji']
-        if count >= 4:  # 人気商品
-            order_qty = 30
-            reason = "在庫が少なくなりそうなので"
-        elif count >= 2:  # 普通の商品
-            order_qty = 20
-            reason = "順調に売れているので"
-        else:  # 不人気商品
-            order_qty = 0
-            reason = "在庫が余っているので"
+        
+        # 数理モデルによる発注量計算
+        base_order = 20  # 基準発注量
+        sales_ratio = count / average_sales  # 販売実績係数
+        safety_factor = 0.2  # 安全在庫係数
+        
+        # 発注量 = 基準発注量 × (販売実績係数 + 安全在庫係数)
+        calculated_order = base_order * (sales_ratio + safety_factor)
+        
+        # 5個単位に丸める（最低5個）
+        order_qty = max(5, int(calculated_order / 5) * 5)
+        
+        # 理由を販売実績に基づいて決定
+        if sales_ratio >= 1.5:
+            reason = f"高需要商品（平均の{sales_ratio:.1f}倍売上）"
+        elif sales_ratio >= 1.0:
+            reason = f"標準商品（平均の{sales_ratio:.1f}倍売上）"
+        elif sales_ratio >= 0.5:
+            reason = f"低需要商品（平均の{sales_ratio:.1f}倍売上）"
+        else:
+            reason = f"超低需要商品（平均の{sales_ratio:.1f}倍売上）"
         
         order_info.append({
             '商品': f"{emoji} {product}",
-            '発注数': f"{order_qty}個" if order_qty > 0 else "発注なし",
+            '売上個数': f"{count}個",
+            '発注数': f"{order_qty}個",
             '理由': reason
+        })
+        
+        calculation_details.append({
+            '商品': product,
+            '売上個数': count,
+            '販売実績係数': f"{sales_ratio:.2f}",
+            '計算式': f"{base_order} × ({sales_ratio:.2f} + {safety_factor}) = {calculated_order:.1f}",
+            '発注量': f"{order_qty}個"
         })
     
     order_df = pd.DataFrame(order_info)
     st.table(order_df)
+    
+    # 計算過程の詳細表示
+    st.subheader("🔢 計算過程詳細")
+    with st.expander("数理モデルの計算過程を見る", expanded=False):
+        st.write(f"**全体売上**: {total_sales}個")
+        st.write(f"**商品あたり平均売上**: {average_sales:.1f}個")
+        st.write("")
+        
+        calc_df = pd.DataFrame(calculation_details)
+        st.dataframe(calc_df, use_container_width=True)
     
     if st.button("📦 この内容で配送センターに発注する", type="primary"):
         st.session_state.current_step = 5
@@ -333,8 +384,7 @@ elif st.session_state.current_step == 5:
     
     fig = go.Figure(data=[edge_trace, node_trace, edge_label_trace],
                     layout=go.Layout(
-                        title='情報システムのエッジとノード図',
-                        titlefont_size=16,
+                        title=dict(text='情報システムのエッジとノード図', font=dict(size=16)),
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
