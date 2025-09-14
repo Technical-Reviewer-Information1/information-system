@@ -6,6 +6,8 @@ import networkx as nx
 from datetime import datetime, timedelta
 import random
 
+st.set_page_config(page_title="情報システム", layout="wide")
+
 # セッション状態の初期化
 if 'current_step' not in st.session_state:
     st.session_state.current_step = 1
@@ -54,7 +56,7 @@ if 'sales_data' not in st.session_state:
     st.session_state.sales_data.sort(key=lambda x: x['時刻'], reverse=True)
 
 # アプリケーションタイトル
-st.title("情報システム体験Webアプリ")
+st.title("情報システム（pp.228-229）")
 st.caption("Created by Dit-Lab.(Daiki ITO)")
 st.caption("Supported by Tomoaki ATSUMI")
 
