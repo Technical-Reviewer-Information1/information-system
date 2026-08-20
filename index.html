@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情報システム｜情報Ⅰ共通テスト対策問題集</title>
+<meta name="description" content="スーパーマーケットの情報の流れを図でたどり、POSレジを実際に打ちながら、集まったデータで何ができるかを確かめます。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%2315181c%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-size=%2218%22 font-family=%22monospace%22 fill=%22%23fff%22 text-anchor=%22middle%22%3E01%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="inner">
+    <span class="eyebrow">第 9 章　データベース　9-1</span>
+    <h1>情報システム（pp.228）</h1>
+    <p class="lead">スーパーマーケットの情報の流れを図でたどり、POSレジを実際に打ちながら、集まったデータで何ができるかを確かめます。</p>
+    <p class="credit">Created by Dit-Lab.(Daiki ITO)　/　Supported by Tomoaki ATSUMI</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="step" id="step1">
+    <h2><span class="no">STEP 1</span>情報の流れをたどる</h2>
+    <p class="desc">スーパーマーケット「LikeWing」の情報システムです。<strong>青い矢印（あ・い・う）</strong>をクリックすると、何が流れているかが出ます。</p>
+    <div class="panel">
+      <div id="sysBox"></div>
+      <div class="note" id="sysNote" style="margin-top:12px">矢印またはラベルをクリックしてください。</div>
+    </div>
+  </section>
+
+  <section class="step" id="step2">
+    <h2><span class="no">STEP 2</span>その情報はどの流れで必要か（問1）</h2>
+    <p class="desc">必要だと思う流れをすべて選んで、「確かめる」を押します。</p>
+    <div class="panel">
+      <div id="pickBox"></div>
+      <div class="note" id="pickNote" style="margin-top:12px"></div>
+      <hr class="sep">
+      <div id="q1Box"></div>
+      <div class="note" id="q1Note" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section class="step" id="step3">
+    <h2><span class="no">STEP 3</span>POSレジを打ってみる</h2>
+    <p class="desc">商品を押すと、レジのデータが1件ずつたまっていきます。何が記録されるかに注目しましょう。</p>
+    <div class="panel">
+      <div class="grid c2">
+        <div>
+          <label class="fld"><input type="checkbox" id="memOn" checked> ポイントカードを提示する</label>
+          <div class="posgrid" id="posBox" style="margin-top:10px"></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn" id="posAuto">まとめて100件打つ</button>
+            <button class="btn" id="posClear">レジを空にする</button>
+          </div>
+        </div>
+        <div>
+          <div class="metrics">
+            <div class="metric"><div class="k">記録された件数</div><div class="v" id="posN">0</div></div>
+            <div class="metric"><div class="k">売上合計</div><div class="v" id="posSum">0 円</div></div>
+            <div class="metric"><div class="k">会員の割合</div><div class="v" id="posMem">—</div></div>
+          </div>
+          <div class="tbl-scroll" style="margin-top:12px"><table class="tbl" id="posTable"></table></div>
+        </div>
+      </div>
+      <hr class="sep">
+      <p class="qhead">集まったデータで分かること</p>
+      <div id="posChart"></div>
+      <div class="note" id="posNote" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section class="step" id="step4">
+    <h2><span class="no">STEP 4</span>ビッグデータの活用（問2）</h2>
+    <div class="panel">
+      <div class="tbl-scroll"><table class="tbl" id="vTable"></table></div>
+      <hr class="sep">
+      <div id="q2Box"></div>
+      <div class="note" id="q2Note" style="margin-top:10px"></div>
+      <hr class="sep">
+      <p class="qhead">分野ごとの情報システムの例</p>
+      <div class="tbl-scroll"><table class="tbl" id="sysTable"></table></div>
+    </div>
+  </section>
+
+  <section class="step" id="glossary">
+    <h2><span class="no">用語</span>この節で出てくることば</h2>
+    <div class="panel"><div id="glossBox"></div></div>
+  </section>
+
+  <section class="step" id="wrap">
+    <h2><span class="no">まとめ</span>おさえておきたいこと</h2>
+    <div class="panel">
+      <ul class="bullets">
+        <li>情報システムでは、<strong>商品の流れ</strong>と<strong>情報の流れ</strong>を分けて考える。</li>
+        <li><strong>店コード</strong>は「どの店に届けるか」「どの店の売上か」で必要（あ・い）。<strong>ポイント会員ID</strong>は「誰が買ったか」で必要（い・う）。配送センターには不要。</li>
+        <li><strong>POSシステム</strong>＝販売時点情報管理システム。「いつ・どの商品が・いくらで・いくつ売れたか」を管理する。</li>
+        <li>ビッグデータの3つの特性は <strong>多様性（Variety）・頻度（Velocity）・量（Volume）</strong>。頭文字をとって3V。</li>
+        <li>数百人のアンケートや人手での確認は、ビッグデータの活用とはいえない。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="no">活用</span>授業・探究での使い方</h2>
+    <div class="use-note">
+      <h3>授業で</h3>
+      <ul>
+        <li>STEP 1 で矢印を1本ずつ押し、どんな情報が流れているかを言わせる。</li>
+        <li>STEP 3 のPOSレジを打たせ、集まったデータから何が分かるかを考えさせる。</li>
+        <li>STEP 4 でビッグデータの3Vを、身近なサービスに当てはめさせる。</li>
+      </ul>
+      <h3 style="margin-top:12px">探究で</h3>
+      <ul>
+        <li>近所の店のポイントカードが、どんな情報を集めているかを調べる。</li>
+        <li>POSデータから分かること・分からないことを整理する。</li>
+        <li>情報システムが止まったときに何が起こるかを考え、可用性の大切さを説明する。</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  情報Ⅰ 共通テスト対策問題集（技術評論社）連動Webアプリ　/　Created by Dit-Lab.(Daiki ITO)　/　Supported by Tomoaki ATSUMI
+</footer>
+
+<script src="js/tools.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/terms.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
