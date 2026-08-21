@@ -185,6 +185,28 @@
         a: 2, why: 'SNSの投稿は<strong>多様・大量・リアルタイム</strong>という3Vをすべて満たします。⓪と①は量が限られ、③は<strong>人手</strong>で確認しているのでビッグデータの活用とはいえません。' }
     ], '本文の答えは【ウ】② です。');
     window.Terms.glossary($('glossBox'), ['情報システム', 'POSシステム', 'ビッグデータ', 'IoT', '人工知能', '可用性', '個人情報']);
+    Worksheet.make('wsBox', {
+      name: 'information-system',
+      fields: [
+        { id: 's1', label: '① 取り上げるシステム', hint: '交通系ICカード、コンビニのPOS、図書館の貸出、学習支援アプリなど。', rows: 2, ph: '例：交通系ICカードの改札' },
+        { id: 's2', label: '② 入力', hint: 'だれが・何を・どこから入れるか。', rows: 2, ph: '例：カードをタッチ→カードID、乗車駅、時刻' },
+        { id: 's3', label: '③ 処理', hint: 'どんな計算・判断をしているか。', rows: 3, ph: '例：乗車駅と降車駅から運賃を計算し、残高から引く。残高不足なら扉を閉じる' },
+        { id: 's4', label: '④ 出力', hint: '人が受け取るもの。', rows: 2, ph: '例：残高表示、扉の開閉、利用履歴' },
+        { id: 's5', label: '⑤ 蓄積されるデータ', hint: '何が、どれくらいの期間残るか。', rows: 2, ph: '例：いつ・どの駅を通ったかの履歴' },
+        { id: 's6', label: '⑥ 止まると何が困るか', hint: '代わりの手段（縮退運転）は何か。', rows: 2, ph: '例：改札が開かず行列になる。駅員が手で通し、あとから精算する' }
+      ],
+      build: function (v, e) {
+        return '<h4>情報システム分解シート</h4><dl>' +
+          '<dt>① システム</dt><dd>' + e(v.s1) + '</dd>' +
+          '<dt>② 入力</dt><dd>' + e(v.s2) + '</dd>' +
+          '<dt>③ 処理</dt><dd>' + e(v.s3) + '</dd>' +
+          '<dt>④ 出力</dt><dd>' + e(v.s4) + '</dd>' +
+          '<dt>⑤ 蓄積されるデータ</dt><dd>' + e(v.s5) + '</dd>' +
+          '<dt>⑥ 止まったときの影響と代替</dt><dd>' + e(v.s6) + '</dd></dl>';
+      },
+      note: '⑥を考えると、システムが「あって当たり前」ではないことが見えてきます。'
+    });
+
     window.Terms.attach();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
